@@ -13,9 +13,9 @@ param functionAppRuntimeVersion string
 @minLength(1)
 param resourceGroupName string
 @minLength(1)
-param functionPlanName string
+param greenFxPlanName string
 @minLength(1)
-param functionAppName string
+param greenFxAppName string
 @minLength(1)
 param storageAccountName string
 
@@ -31,9 +31,9 @@ var abbrs = loadJsonContent('./abbreviations.json')
 // Generate a unique token to be used in naming resources.
 var resourceToken = toLower(uniqueString(subscription().id, environmentName, location))
 // Generate a unique function app name if one is not provided.
-var appName = !empty(functionAppName) ? functionAppName : '${shortGuid}${abbrs.webSitesFunctions}${resourceToken}'
+var greenAppName = !empty(greenFxAppName) ? greenFxAppName : '${shortGuid}${abbrs.webSitesFunctions}${resourceToken}'
 // Generate a unique container name that will be used for deployments.
-var deploymentStorageContainerName = 'app-package-${take(toLower(appName), 32)}-${take(resourceToken, 7)}'
+var greenFxDeploymentStorageContainerName = 'app-package-${take(toLower(greenAppName), 32)}-${take(resourceToken, 7)}'
 
 var backendPoolName = 'green-blue-pool'
 // tags that should be applied to all resources.
@@ -63,7 +63,7 @@ module storage 'core/storage/storage-account.bicep' = {
     location: location
     tags: tags
     name: !empty(storageAccountName) ? storageAccountName : '${abbrs.storageStorageAccounts}${resourceToken}'
-    containers: [{name: deploymentStorageContainerName}]
+    containers: [{name: greenFxDeploymentStorageContainerName}]
   }
 }
 
@@ -85,10 +85,10 @@ module flexFunction 'core/host/function.bicep' = {
   params: {
     location: location
     tags: tags
-    planName: !empty(functionPlanName) ? functionPlanName : '${abbrs.webServerFarms}${resourceToken}${shortGuid}'
-    appName: appName
+    planName: !empty(greenFxPlanName) ? greenFxPlanName : '${abbrs.webServerFarms}${resourceToken}${shortGuid}'
+    appName: greenAppName
     storageAccountName: storage.outputs.name
-    deploymentStorageContainerName: deploymentStorageContainerName
+    deploymentStorageContainerName: greenFxDeploymentStorageContainerName
     applicationInsightsName : monitoring.outputs.applicationInsightsName
     functionAppRuntime: functionAppRuntime
     functionAppRuntimeVersion: functionAppRuntimeVersion
