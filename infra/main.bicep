@@ -95,14 +95,15 @@ module flexFunction 'core/host/function.bicep' = {
 }
 
 module apimBackend 'core/apim/backend.bicep' = {
-  name: 'apim-backend'
+  name: 'green-backend'
   scope: apimResourceGroup
   params: {
     apimServiceName: apimServiceName
-    backendName: 'flex-backend-greens-backend'
+    backendName: 'green-backend'
+    backendDescription: 'Green Backend service for API Management'
     backendUrl: flexFunction.outputs.functionUri
     backendProtocol: 'http'
-    backendDescription: 'Green Backend service for API Management'
+    functionKey: flexFunction.outputs.functionKey    
     backendTitle: flexFunction.outputs.functionKey
     validateCertificateChain: true
     validateCertificateName: true

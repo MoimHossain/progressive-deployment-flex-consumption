@@ -21,6 +21,9 @@ param backendDescription string = 'Backend service for API Management'
 @description('Backend title')
 param backendTitle string
 
+@description('Function key for the backend')
+param functionKey string
+
 @description('Validate SSL certificate chain')
 param validateCertificateChain bool = true
 
@@ -41,6 +44,13 @@ resource apimBackend 'Microsoft.ApiManagement/service/backends@2024-05-01' = {
     url: backendUrl
     protocol: backendProtocol
     title: backendTitle
+    credentials: {
+      header: {
+        'x-functions-key': [
+          functionKey
+        ]
+      }
+    }
     tls: {
       validateCertificateChain: validateCertificateChain
       validateCertificateName: validateCertificateName
