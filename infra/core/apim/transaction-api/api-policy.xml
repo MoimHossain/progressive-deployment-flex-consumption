@@ -1,7 +1,7 @@
     <policies>
       <inbound>
         <base />
-        <set-backend-service backend-id="green-backend" />
+        <set-backend-service backend-id="green-blue-pool" />
       </inbound>
       <backend><base /></backend>
       <outbound><base /></outbound>

@@ -34,6 +34,8 @@ var resourceToken = toLower(uniqueString(subscription().id, environmentName, loc
 var appName = !empty(functionAppName) ? functionAppName : '${shortGuid}${abbrs.webSitesFunctions}${resourceToken}'
 // Generate a unique container name that will be used for deployments.
 var deploymentStorageContainerName = 'app-package-${take(toLower(appName), 32)}-${take(resourceToken, 7)}'
+
+var backendPoolName = 'green-blue-pool'
 // tags that should be applied to all resources.
 var tags = {
   // Tag all resources with the environment name.
@@ -94,7 +96,7 @@ module flexFunction 'core/host/function.bicep' = {
   }
 }
 
-module apimBackend 'core/apim/backend.bicep' = {
+module apimGreenBackend 'core/apim/backend.bicep' = {
   name: 'green-backend'
   scope: apimResourceGroup
   params: {
@@ -107,6 +109,36 @@ module apimBackend 'core/apim/backend.bicep' = {
     backendTitle: flexFunction.outputs.functionKey
     validateCertificateChain: true
     validateCertificateName: true
+  }
+}
+
+module apimBlueBackend 'core/apim/backend.bicep' = {
+  name: 'blue-backend'
+  scope: apimResourceGroup
+  params: {
+    apimServiceName: apimServiceName
+    backendName: 'blue-backend'
+    backendDescription: 'Blue Backend service for API Management'
+    backendUrl: flexFunction.outputs.functionUri
+    backendProtocol: 'http'
+    functionKey: flexFunction.outputs.functionKey    
+    backendTitle: flexFunction.outputs.functionKey
+    validateCertificateChain: true
+    validateCertificateName: true
+  }
+}
+
+module backendPool 'core/apim/backend-pool.bicep' = {
+  name: backendPoolName
+  scope: apimResourceGroup
+  params: {
+    apimServiceName: apimServiceName
+    backendPoolName: backendPoolName
+    backendIds: [
+      apimGreenBackend.outputs.backendId
+      apimBlueBackend.outputs.backendId
+    ]
+    weights: [100, 0]
   }
 }
 
@@ -131,4 +163,3 @@ module txApi 'core/apim/transaction-api/api.bicep' = {
     apiPath: ''
   }
 }
-
