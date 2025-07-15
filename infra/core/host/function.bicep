@@ -95,7 +95,7 @@ resource storageRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-
 var functionKey = listKeys('${flexFuncApp.id}/host/default', '2022-03-01').functionKeys.default
 
 // output function URI, HOST NAME and key
-output functionUri string = 'https://${flexFuncApp.properties.defaultHostName}/api'
+output functionUri string = 'https://${flexFuncApp.properties.defaultHostName}'
 output functionHostName string = flexFuncApp.properties.defaultHostName
 output functionKey string = '${functionKey}'
 output functionAppName string = flexFuncApp.name

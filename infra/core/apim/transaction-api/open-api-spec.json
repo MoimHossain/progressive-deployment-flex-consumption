@@ -1,0 +1,43 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Transaction API",
+    "description": "API for retrieving transaction status",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/transaction": {
+      "get": {
+        "summary": "Get transaction status",
+        "operationId": "getTransaction",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "hello": {
+                      "type": "string",
+                      "example": "world"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "API executed successfully"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2025-07-15 10:27:35"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -109,3 +109,15 @@ module apimBackend 'core/apim/backend.bicep' = {
     validateCertificateName: true
   }
 }
+
+
+module txApi 'core/apim/transaction-api/api.bicep' = {
+  name: 'transaction-api'
+  scope: apimResourceGroup
+  params: {
+    apimServiceName: apimServiceName
+    apiName: 'transaction-api'
+    apiDisplayName: 'Transaction API'
+    apiPath: ''
+  }
+}
