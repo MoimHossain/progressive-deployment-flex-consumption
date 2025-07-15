@@ -110,6 +110,16 @@ module apimBackend 'core/apim/backend.bicep' = {
   }
 }
 
+module slotMarker 'core/apim/slot-marker.bicep' = {
+  name: 'slot-marker'
+  scope: apimResourceGroup
+  params: {
+    apimServiceName: apimServiceName
+    currentSlotNameKey: 'current-slot-name'
+    currentSlotName: 'green-backend'
+  }
+}
+
 
 module txApi 'core/apim/transaction-api/api.bicep' = {
   name: 'transaction-api'
@@ -121,3 +131,4 @@ module txApi 'core/apim/transaction-api/api.bicep' = {
     apiPath: ''
   }
 }
+
