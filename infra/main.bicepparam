@@ -1,0 +1,10 @@
+using 'main.bicep'
+
+param environmentName = 'useracceptance'
+param location = 'westeurope'
+param functionAppRuntime = 'custom'
+param functionAppRuntimeVersion = '1.0'
+param resourceGroupName = 'bluegreen-deployment'
+param functionPlanName = 'flexplan-useracceptance'
+param functionAppName = 'flexfuncuseracceptance'
+param storageAccountName = 'flexconsumptionstorag'
