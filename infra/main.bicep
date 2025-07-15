@@ -19,6 +19,9 @@ param functionAppName string
 @minLength(1)
 param storageAccountName string
 
+param apimServiceName string
+param apimResourceGroupName string 
+
 @minValue(40)
 @maxValue(1000)
 param maximumInstanceCount int = 100
@@ -38,17 +41,22 @@ var tags = {
 }
 
 
-resource rg 'Microsoft.Resources/resourceGroups@2022-09-01' = {
+resource functionResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' = {
   location: location
   tags: tags
   name: !empty(resourceGroupName) ? resourceGroupName : '${abbrs.resourcesResourceGroups}${environmentName}'
 }
 
+resource apimResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' = {
+  location: location
+  tags: tags
+  name: apimResourceGroupName
+}
 
 // Backing storage for Azure Functions
 module storage 'core/storage/storage-account.bicep' = {
   name: 'storage'
-  scope: rg
+  scope: functionResourceGroup
   params: {
     location: location
     tags: tags
@@ -59,7 +67,7 @@ module storage 'core/storage/storage-account.bicep' = {
 
 module monitoring 'core/monitor/monitoring.bicep' = {
   name: 'monitoring'
-  scope: rg
+  scope: functionResourceGroup
   params: {
     location: location
     tags: tags
@@ -71,7 +79,7 @@ module monitoring 'core/monitor/monitoring.bicep' = {
 // Azure Functions Flex Consumption
 module flexFunction 'core/host/function.bicep' = {
   name: 'functionapp'
-  scope: rg
+  scope: functionResourceGroup
   params: {
     location: location
     tags: tags
@@ -83,6 +91,20 @@ module flexFunction 'core/host/function.bicep' = {
     functionAppRuntime: functionAppRuntime
     functionAppRuntimeVersion: functionAppRuntimeVersion
     maximumInstanceCount: maximumInstanceCount
-    shortGuid: shortGuid
+  }
+}
+
+module apimBackend 'core/apim/backend.bicep' = {
+  name: 'apim-backend'
+  scope: apimResourceGroup
+  params: {
+    apimServiceName: apimServiceName
+    backendName: 'flex-backend-greens-backend'
+    backendUrl: flexFunction.outputs.functionUri
+    backendProtocol: 'http'
+    backendDescription: 'Green Backend service for API Management'
+    backendTitle: flexFunction.outputs.functionKey
+    validateCertificateChain: true
+    validateCertificateName: true
   }
 }

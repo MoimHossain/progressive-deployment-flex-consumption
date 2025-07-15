@@ -7,7 +7,6 @@ param tags object = {}
 param functionAppRuntime string = 'node'
 param functionAppRuntimeVersion string = '20'
 param maximumInstanceCount int = 100
-param shortGuid string
 param applicationInsightsName string
 
 resource storage 'Microsoft.Storage/storageAccounts@2023-01-01' existing = {
@@ -82,8 +81,8 @@ resource flexFuncApp 'Microsoft.Web/sites@2023-12-01' = {
 var storageRoleDefinitionId  = 'b7e6dc6d-f1e8-4753-8033-0f276bb0955b' //Storage Blob Data Owner role
 
 // Allow access from function app to storage account using a managed identity
-resource storageRoleAssignment 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
-  name: guid(storage.id, storageRoleDefinitionId, shortGuid)
+resource storageRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(storage.id, flexFuncApp.id, storageRoleDefinitionId)
   scope: storage
   properties: {
     roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', storageRoleDefinitionId)
@@ -91,3 +90,12 @@ resource storageRoleAssignment 'Microsoft.Authorization/roleAssignments@2020-04-
     principalType: 'ServicePrincipal'
   }
 }
+
+
+var functionKey = listKeys('${flexFuncApp.id}/host/default', '2022-03-01').functionKeys.default
+
+// output function URI, HOST NAME and key
+output functionUri string = 'https://${flexFuncApp.properties.defaultHostName}/api'
+output functionHostName string = flexFuncApp.properties.defaultHostName
+output functionKey string = '${functionKey}'
+output functionAppName string = flexFuncApp.name
