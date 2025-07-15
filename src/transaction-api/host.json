@@ -8,6 +8,6 @@
 		"description": {
 			"defaultExecutablePath": "transaction-api"
 		},
-		"enableForwardingHttpRequest": true
+		"enableForwardingHttpRequest": false
 	}
 }
