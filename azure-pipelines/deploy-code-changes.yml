@@ -152,3 +152,24 @@ stages:
           filePath: 'scripts/traffic-shift.sh'
           arguments: '50'
           workingDirectory: infra
+
+  - stage: GADeployment
+    displayName: 'General Available - Deployment - Traffic Shift'
+    dependsOn: RingADeployment
+    condition: succeeded()
+    jobs:
+    - job: GADeploymentTrafficShift
+      displayName: '100% Traffic Shift to new version'
+      steps:
+      - checkout: self
+      
+      - bash: 'az login --service-principal -u $(sp_client_id) -p $(sp_client_secret) --tenant $(sp_tenant_id)'
+        displayName: 'Azure Login'
+      
+      - task: Bash@3
+        displayName: 'Execute Traffic Shift 100% to the new version'
+        inputs:
+          targetType: filePath
+          filePath: 'scripts/traffic-shift.sh'
+          arguments: '100'
+          workingDirectory: infra          

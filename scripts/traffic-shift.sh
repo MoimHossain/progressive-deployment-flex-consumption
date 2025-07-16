@@ -70,3 +70,31 @@ az deployment sub create --location westeurope --template-file traffic-shifting.
     --parameters apimServiceName=$APIM \
     --parameters blueWeight=$BLUE_WEIGHT \
     --parameters greenWeight=$GREEN_WEIGHT
+
+# If traffic percentage is 100%, update the current-slot-name to the new active slot
+if [ "$TRAFFIC_PERCENTAGE" -eq 100 ]; then
+    echo "Traffic percentage is 100%, updating current-slot-name..."
+    
+    # Determine the new current slot based on where we shifted traffic
+    if [ "$CURRENT_SLOT" = "green-backend" ]; then
+        # We shifted 100% to blue, so blue becomes the new current slot
+        NEW_CURRENT_SLOT="blue-backend"
+    else
+        # We shifted 100% to green, so green becomes the new current slot
+        NEW_CURRENT_SLOT="green-backend"
+    fi
+    
+    echo "Updating current-slot-name from $CURRENT_SLOT to $NEW_CURRENT_SLOT..."
+    
+    # Update the APIM named value for current-slot-name
+    az apim nv update -g $APIMRG -n $APIM --named-value-id current-slot-name --value $NEW_CURRENT_SLOT
+    
+    if [ $? -eq 0 ]; then
+        echo "Successfully updated current-slot-name to $NEW_CURRENT_SLOT"
+    else
+        echo "ERROR: Failed to update current-slot-name!"
+        exit 1
+    fi
+else
+    echo "Traffic percentage is $TRAFFIC_PERCENTAGE%, current-slot-name remains unchanged at $CURRENT_SLOT"
+fi
