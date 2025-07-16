@@ -110,3 +110,20 @@ stages:
                 targetType: filePath
                 filePath: 'scripts/deploy-code.sh'
                 workingDirectory: '$(System.ArtifactsDirectory)/function-app-package'
+
+    - job: CanaryDeployment
+      displayName: 'Canary Deployment - Traffic Shift'
+      dependsOn: Deploy
+      condition: succeeded()
+      steps:
+      - checkout: self
+      
+      - bash: 'az login --service-principal -u $(sp_client_id) -p $(sp_client_secret) --tenant $(sp_tenant_id)'
+        displayName: 'Azure Login'
+      
+      - task: Bash@3
+        displayName: 'Execute Traffic Shift'
+        inputs:
+          targetType: filePath
+          filePath: 'scripts/traffic-shift.sh'
+          workingDirectory: '$(System.DefaultWorkingDirectory)'
