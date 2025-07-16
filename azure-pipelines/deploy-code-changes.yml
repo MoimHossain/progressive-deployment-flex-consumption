@@ -3,21 +3,21 @@ trigger: none
 
 pool:
   vmImage: ubuntu-latest
-variables:
- resourceGroupName: "api-management-demo"
- location: "westeurope"
- 
 
+variables:
+ functionAppName: "fx-tx-blue-app"
+ 
 stages:
   - stage: BuildCode
-    displayName: 'Build Code (Golang) and produce Executable'
+    displayName: 'Build Code (Golang) and Create Artifact'
     jobs:
     - job: Build
       displayName: 'Build Job'
       steps:
       - checkout: self
+      
       - task: Bash@3
-        displayName: Build Code (Golang) and produce Executable
+        displayName: 'Build Go Application'
         inputs:
           targetType: filePath
           filePath: 'scripts/build-code.sh'
@@ -25,3 +25,96 @@ stages:
         env:
             GOOS: linux
             GOARCH: amd64
+      
+      - task: Bash@3
+        displayName: 'Prepare Function App Package'
+        inputs:
+          targetType: 'inline'
+          script: |
+            echo "Preparing function app package..."
+            
+            # Create staging directory
+            mkdir -p $(Build.ArtifactStagingDirectory)/function-app
+            
+            # Copy all necessary files to staging directory
+            cp -r src/transaction-api/* $(Build.ArtifactStagingDirectory)/function-app/
+            
+            # Ensure the executable has correct permissions
+            chmod +x $(Build.ArtifactStagingDirectory)/function-app/transaction-api
+            
+            # List contents to verify
+            echo "Function app package contents:"
+            ls -la $(Build.ArtifactStagingDirectory)/function-app/
+            
+            echo "Transaction folder contents:"
+            ls -la $(Build.ArtifactStagingDirectory)/function-app/transaction/
+      
+      - task: PublishBuildArtifacts@1
+        displayName: 'Publish Function App Artifact'
+        inputs:
+          pathToPublish: '$(Build.ArtifactStagingDirectory)/function-app'
+          artifactName: 'function-app-package'
+          publishLocation: 'Container'
+
+  - stage: DeployCode
+    displayName: 'Deploy Code to Azure Function App'
+    dependsOn: BuildCode
+    condition: succeeded()
+    jobs:
+    - deployment: Deploy
+      displayName: 'Deploy to Azure'
+      environment: 'Production'
+      strategy:
+        runOnce:
+          deploy:
+            steps:
+            - task: DownloadBuildArtifacts@1
+              displayName: 'Download Function App Artifact'
+              inputs:
+                buildType: 'current'
+                downloadType: 'single'
+                artifactName: 'function-app-package'
+                downloadPath: '$(System.ArtifactsDirectory)'
+            
+            - task: Bash@3
+              displayName: 'Install Azure Functions Core Tools'
+              inputs:
+                targetType: 'inline'
+                script: |
+                  echo "Installing Azure Functions Core Tools..."
+                  npm install -g azure-functions-core-tools@4 --unsafe-perm true
+                  func --version
+            
+            - task: Bash@3
+              displayName: 'Verify Package Contents'
+              inputs:
+                targetType: 'inline'
+                script: |
+                  echo "Verifying downloaded package contents..."
+                  ls -la $(System.ArtifactsDirectory)/function-app-package/
+                  
+                  echo "Checking host.json exists:"
+                  cat $(System.ArtifactsDirectory)/function-app-package/host.json
+                  
+                  echo "Checking function.json exists:"
+                  cat $(System.ArtifactsDirectory)/function-app-package/transaction/function.json
+                  
+                  echo "Checking executable exists and permissions:"
+                  ls -la $(System.ArtifactsDirectory)/function-app-package/transaction-api
+            - bash: 'az login --service-principal -u $(sp_client_id) -p $(sp_client_secret) --tenant $(sp_tenant_id)'
+              displayName: 'Azure Login'
+            - task: Bash@3
+              displayName: 'Deploy Function App'
+              inputs:
+                targetType: 'inline'
+                script: |
+                  echo "Deploying Function App to Azure..."
+                  
+                  # Navigate to the function app directory
+                  cd $(System.ArtifactsDirectory)/function-app-package/
+                  
+                  # Deploy using Azure Functions Core Tools
+                  func azure functionapp publish $(functionAppName) --build-native-deps
+                  
+                  echo "Deployment completed successfully!"
+                workingDirectory: '$(System.ArtifactsDirectory)/function-app-package'
