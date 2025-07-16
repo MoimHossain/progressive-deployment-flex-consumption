@@ -1,0 +1,27 @@
+trigger: none
+#- master
+
+pool:
+  vmImage: ubuntu-latest
+variables:
+ resourceGroupName: "api-management-demo"
+ location: "westeurope"
+ 
+
+stages:
+  - stage: BuildCode
+    displayName: 'Build Code (Golang) and produce Executable'
+    jobs:
+    - job: Build
+      displayName: 'Build Job'
+      steps:
+      - checkout: self
+      - task: Bash@3
+        displayName: Build Code (Golang) and produce Executable
+        inputs:
+          targetType: filePath
+          filePath: 'scripts/build-code.sh'
+          workingDirectory: 'src/transaction-api'
+        env:
+            GOOS: linux
+            GOARCH: amd64
