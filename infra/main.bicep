@@ -17,6 +17,10 @@ param greenFxPlanName string
 @minLength(1)
 param greenFxAppName string
 @minLength(1)
+param blueFxPlanName string
+@minLength(1)
+param blueFxAppName string
+@minLength(1)
 param storageAccountName string
 
 param apimServiceName string
@@ -28,19 +32,17 @@ param maximumInstanceCount int = 100
 param uniqueGuid string = newGuid()
 param shortGuid string = substring(uniqueGuid, 0, 3)
 var abbrs = loadJsonContent('./abbreviations.json')
-// Generate a unique token to be used in naming resources.
 var resourceToken = toLower(uniqueString(subscription().id, environmentName, location))
-// Generate a unique function app name if one is not provided.
+
+
 var greenAppName = !empty(greenFxAppName) ? greenFxAppName : '${shortGuid}${abbrs.webSitesFunctions}${resourceToken}'
-// Generate a unique container name that will be used for deployments.
 var greenFxDeploymentStorageContainerName = 'app-package-${take(toLower(greenAppName), 32)}-${take(resourceToken, 7)}'
 
+var blueAppName = !empty(blueFxAppName) ? blueFxAppName : '${shortGuid}${abbrs.webSitesFunctions}${resourceToken}'
+var blueFxDeploymentStorageContainerName = 'app-package-${take(toLower(blueAppName), 32)}-${take(resourceToken, 7)}'
+
 var backendPoolName = 'green-blue-pool'
-// tags that should be applied to all resources.
-var tags = {
-  // Tag all resources with the environment name.
-  'azd-env-name': environmentName
-}
+var tags = { 'azd-env-name': environmentName }
 
 
 resource functionResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' = {
@@ -79,8 +81,8 @@ module monitoring 'core/monitor/monitoring.bicep' = {
 }
 
 // Azure Functions Flex Consumption
-module flexFunction 'core/host/function.bicep' = {
-  name: 'functionapp'
+module greenFunctionApp 'core/host/function.bicep' = {
+  name: 'greenfunctionapp'
   scope: functionResourceGroup
   params: {
     location: location
@@ -96,6 +98,24 @@ module flexFunction 'core/host/function.bicep' = {
   }
 }
 
+// Azure Functions Flex Consumption
+module blueFunctionApp 'core/host/function.bicep' = {
+  name: 'bluefunctionapp'
+  scope: functionResourceGroup
+  params: {
+    location: location
+    tags: tags
+    planName: !empty(blueFxPlanName) ? blueFxPlanName : '${abbrs.webServerFarms}${resourceToken}${shortGuid}'
+    appName: blueAppName
+    storageAccountName: storage.outputs.name
+    deploymentStorageContainerName: blueFxDeploymentStorageContainerName
+    applicationInsightsName : monitoring.outputs.applicationInsightsName
+    functionAppRuntime: functionAppRuntime
+    functionAppRuntimeVersion: functionAppRuntimeVersion
+    maximumInstanceCount: maximumInstanceCount
+  }
+}
+
 module apimGreenBackend 'core/apim/backend.bicep' = {
   name: 'green-backend'
   scope: apimResourceGroup
@@ -103,10 +123,10 @@ module apimGreenBackend 'core/apim/backend.bicep' = {
     apimServiceName: apimServiceName
     backendName: 'green-backend'
     backendDescription: 'Green Backend service for API Management'
-    backendUrl: flexFunction.outputs.functionUri
+    backendUrl: greenFunctionApp.outputs.functionUri
     backendProtocol: 'http'
-    functionKey: flexFunction.outputs.functionKey    
-    backendTitle: flexFunction.outputs.functionKey
+    functionKey: greenFunctionApp.outputs.functionKey
+    backendTitle: greenFunctionApp.outputs.functionKey
     validateCertificateChain: true
     validateCertificateName: true
   }
@@ -119,10 +139,10 @@ module apimBlueBackend 'core/apim/backend.bicep' = {
     apimServiceName: apimServiceName
     backendName: 'blue-backend'
     backendDescription: 'Blue Backend service for API Management'
-    backendUrl: flexFunction.outputs.functionUri
+    backendUrl: blueFunctionApp.outputs.functionUri
     backendProtocol: 'http'
-    functionKey: flexFunction.outputs.functionKey    
-    backendTitle: flexFunction.outputs.functionKey
+    functionKey: blueFunctionApp.outputs.functionKey
+    backendTitle: blueFunctionApp.outputs.functionKey
     validateCertificateChain: true
     validateCertificateName: true
   }

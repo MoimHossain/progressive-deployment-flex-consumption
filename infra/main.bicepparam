@@ -11,3 +11,6 @@ param apimResourceGroupName = 'api-management-demo'
 
 param greenFxPlanName = 'flexplan-tx-green'
 param greenFxAppName = 'fx-tx-green-app'
+
+param blueFxPlanName = 'flexplan-tx-blue'
+param blueFxAppName = 'fx-tx-blue-app'
