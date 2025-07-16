@@ -65,7 +65,7 @@ module storage 'core/storage/storage-account.bicep' = {
     location: location
     tags: tags
     name: !empty(storageAccountName) ? storageAccountName : '${abbrs.storageStorageAccounts}${resourceToken}'
-    containers: [{name: greenFxDeploymentStorageContainerName}]
+    containers: [{name: greenFxDeploymentStorageContainerName}, {name: blueFxDeploymentStorageContainerName}]
   }
 }
 
