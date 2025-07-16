@@ -111,10 +111,13 @@ stages:
                 filePath: 'scripts/deploy-code.sh'
                 workingDirectory: '$(System.ArtifactsDirectory)/function-app-package'
 
-    - job: CanaryDeployment
-      displayName: 'Canary Deployment - Traffic Shift'
-      dependsOn: Deploy
-      condition: succeeded()
+  - stage: CanaryDeployment
+    displayName: 'Canary Deployment - Traffic Shift'
+    dependsOn: DeployCode
+    condition: succeeded()
+    jobs:
+    - job: CanaryDeploymentTrafficShift
+      displayName: '10% Traffic Shift to new version'
       steps:
       - checkout: self
       
@@ -127,4 +130,25 @@ stages:
           targetType: filePath
           filePath: 'scripts/traffic-shift.sh'
           arguments: '10'
+          workingDirectory: infra
+    
+  - stage: RingADeployment
+    displayName: 'Ring-A Deployment - Traffic Shift'
+    dependsOn: CanaryDeployment
+    condition: succeeded()
+    jobs:
+    - job: RingADeploymentTrafficShift
+      displayName: '50% Traffic Shift to new version'
+      steps:
+      - checkout: self
+      
+      - bash: 'az login --service-principal -u $(sp_client_id) -p $(sp_client_secret) --tenant $(sp_tenant_id)'
+        displayName: 'Azure Login'
+      
+      - task: Bash@3
+        displayName: 'Execute Traffic Shift 10% to the new version'
+        inputs:
+          targetType: filePath
+          filePath: 'scripts/traffic-shift.sh'
+          arguments: '50'
           workingDirectory: infra
