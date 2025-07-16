@@ -110,8 +110,6 @@ stages:
                 script: |
                   echo "Deploying Function App to Azure..."
                   
-                  # Navigate to the function app directory
-                  cd $(System.ArtifactsDirectory)/function-app-package/
                   
                   # Deploy using Azure Functions Core Tools
                   func azure functionapp publish $(functionAppName) --build-native-deps
