@@ -126,4 +126,4 @@ stages:
         inputs:
           targetType: filePath
           filePath: 'scripts/traffic-shift.sh'
-          workingDirectory: '$(System.DefaultWorkingDirectory)'
+          workingDirectory: infra
