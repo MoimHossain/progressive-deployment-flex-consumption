@@ -122,8 +122,9 @@ stages:
         displayName: 'Azure Login'
       
       - task: Bash@3
-        displayName: 'Execute Traffic Shift'
+        displayName: 'Execute Traffic Shift 10% to the new version'
         inputs:
           targetType: filePath
           filePath: 'scripts/traffic-shift.sh'
+          arguments: '10'
           workingDirectory: infra
