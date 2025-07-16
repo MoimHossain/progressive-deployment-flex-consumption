@@ -1,0 +1,25 @@
+trigger: none
+#- master
+
+pool:
+  vmImage: ubuntu-latest
+variables:
+ resourceGroupName: "api-management-demo"
+ location: "westeurope"
+ 
+
+stages:
+  - stage: ProvisionCompleteInfraStage
+    displayName: 'Provision complete infrastructure on Azure'
+    jobs:
+    - job: ProvisionInfra
+      displayName: 'Provision Infrastructure'
+      steps:
+      - checkout: self
+      - bash: 'az login --service-principal -u $(sp_client_id) -p $(sp_client_secret) --tenant $(sp_tenant_id)'
+      - task: Bash@3
+        displayName: Provision complete infrastructure on Azure
+        inputs:
+          targetType: filePath
+          filePath: 'scripts/provision-everything.sh'
+          workingDirectory: infra
