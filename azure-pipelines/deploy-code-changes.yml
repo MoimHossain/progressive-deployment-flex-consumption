@@ -106,13 +106,6 @@ stages:
             - task: Bash@3
               displayName: 'Deploy Function App'
               inputs:
-                targetType: 'inline'
-                script: |
-                  echo "Deploying Function App to Azure..."
-                  
-                  
-                  # Deploy using Azure Functions Core Tools
-                  func azure functionapp publish $(functionAppName) --build-native-deps
-                  
-                  echo "Deployment completed successfully!"
+                targetType: filePath
+                filePath: 'scripts/deploy-code.sh'
                 workingDirectory: '$(System.ArtifactsDirectory)/function-app-package'
