@@ -47,7 +47,7 @@ func txHttpTriggerHandler(w http.ResponseWriter, r *http.Request) {
 	// Create proper HTTP response structure
 	httpResponse := HttpResponse{
 		StatusCode: 200,
-		Body:       `{"color":"#0000FF","hello":"world","message":"Software version: 1.0.0","timestamp":"` + t.Format("2006-01-02 15:04:05") + `"}`,
+		Body:       `{"color":"#0000FF","hello":"world","message":"Software version: 0.0.1","timestamp":"` + t.Format("2006-01-02 15:04:05") + `"}`,
 		Headers: map[string]interface{}{
 			"Content-Type": "application/json",
 		},
