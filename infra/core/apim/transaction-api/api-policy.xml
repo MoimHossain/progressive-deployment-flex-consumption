@@ -1,9 +1,23 @@
-    <policies>
-      <inbound>
+<policies>
+    <inbound>
+        <cors allow-credentials="false">
+            <allowed-origins>
+                <origin>*</origin>
+            </allowed-origins>
+            <allowed-methods preflight-result-max-age="300">
+                <method>*</method>
+            </allowed-methods>
+            <allowed-headers>
+                <header>*</header>
+            </allowed-headers>
+            <expose-headers>
+                <header>*</header>
+            </expose-headers>
+        </cors>
         <base />
         <set-backend-service backend-id="green-blue-pool" />
-      </inbound>
-      <backend><base /></backend>
-      <outbound><base /></outbound>
-      <on-error><base /></on-error>
-    </policies>
+    </inbound>
+    <backend><base /></backend>
+    <outbound><base /></outbound>
+    <on-error><base /></on-error>
+</policies>
